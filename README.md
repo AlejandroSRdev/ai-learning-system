@@ -1,36 +1,49 @@
-# AI Learning System — State-Driven Backend with Controlled AI Integration
+# AI Learning System
 
-## Overview
+Backend system that models learning as a **state-driven process**, where explanations adapt based on user performance.
 
-This project is a backend-focused system that models learning as a **state-driven, iterative process**, where explanations are dynamically adapted based on user performance.
-
-Rather than relying on AI to control behavior, the system enforces a clear separation:
-
-- The **backend owns decision-making**
-- The **database persists state**
-- The **LLM is used as a constrained generation tool**
-
-The goal is to demonstrate how to build **reliable and controllable AI-powered systems**, not just generate content.
+The focus is not on generating content, but on **controlling how and when AI is used** within a predictable system.
 
 ---
 
-## Core Concept
+## What it does
 
-The system operates through three explicit modes:
+- Generates explanations based on user state  
+- Evaluates understanding with structured tests  
+- Updates performance and adapts next steps  
 
-1. **Explanation**  
-   Generates an explanation based on the current learning state.
+Core loop:
 
-2. **Evaluation**  
-   Produces a structured test aligned with the explanation and level.
-
-3. **Correction**  
-   Evaluates user answers, computes a score, and updates the system state.
-
-Only the **Correction phase modifies the system**, making it the core of the learning loop.
+State → Explanation → Evaluation → Correction → Updated State
 
 ---
 
-## System Behavior
+## Key idea
 
-Each interaction is part of an iterative cycle:
+AI does not control the system.  
+The backend does.
+
+- Decisions (progression, difficulty) are deterministic  
+- State is persisted (PostgreSQL)  
+- AI is used as a constrained generation tool  
+
+---
+
+## Stack
+
+- FastAPI (Python 3.12)  
+- PostgreSQL (Supabase)  
+- OpenAI API  
+- Docker + Fly.io  
+
+---
+
+## Why this project
+
+To demonstrate how to build **reliable AI systems**:
+
+- stateful  
+- controllable  
+- explainable  
+
+Not just generate outputs, but **design behavior**.
