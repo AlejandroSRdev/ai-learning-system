@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AI Learning System</title>
+</head>
+<body>
+
+  <div id="section-1">
+    <input id="level" type="text" placeholder="level">
+    <input id="goal" type="text" placeholder="goal">
+    <input id="current_topic" type="text" placeholder="current_topic">
+    <button onclick="createStudent()">Create Student</button>
+    <p id="student-display" style="display:none"></p>
+  </div>
+
+  <div id="section-2" style="display:none">
+    <button onclick="getExplanation()">Get Explanation</button>
+    <button onclick="getEvaluation()">Get Evaluation</button>
+    <button onclick="submitCorrection()">Submit Correction</button>
+  </div>
+
+  <div id="section-3" style="display:none">
+    <h2 id="exp-title"></h2>
+    <p id="exp-body"></p>
+    <ul id="exp-concepts"></ul>
+    <p id="exp-difficulty"></p>
+  </div>
+
+  <div id="section-4" style="display:none">
+    <p id="progress">Answered 0 / 10</p>
+    <div id="questions-container"></div>
+  </div>
+
+  <div id="section-5" style="display:none">
+    <p id="result-score"></p>
+    <p id="result-decision"></p>
+  </div>
+
+  <p id="error-msg" style="display:none; color:red;"></p>
+
+  <script>
+    let studentId = null;
+    let hasExplanation = false;
+    let hasEvaluation = false;
+    let currentQuestions = [];
+    let selectedAnswers = [];
+
+    async function createStudent() {
+      const level = document.getElementById("level").value;
+      const goal = document.getElementById("goal").value;
+      const current_topic = document.getElementById("current_topic").value;
+      try {
+        const res = await fetch("/students", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ level, goal, current_topic })
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+        document.getElementById("error-msg").style.display = "none";
+        studentId = data.student_id;
+        const display = document.getElementById("student-display");
+        display.textContent = "Student ID: " + studentId;
+        display.style.display = "block";
+        document.getElementById("section-2").style.display = "block";
+      } catch (e) {
+        showError(e.message || "Request failed.");
+      }
+    }
+
+    async function getExplanation() {
+      if (!requireStudent()) return;
+      try {
+        const res = await fetch("/explain/" + studentId, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" }
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+        document.getElementById("error-msg").style.display = "none";
+        hasExplanation = true;
+        document.getElementById("exp-title").textContent = data.title;
+        document.getElementById("exp-body").textContent = data.body;
+        const list = document.getElementById("exp-concepts");
+        list.innerHTML = "";
+        data.key_concepts.forEach(function(concept) {
+          const li = document.createElement("li");
+          li.textContent = concept;
+          list.appendChild(li);
+        });
+        document.getElementById("exp-difficulty").textContent = "Difficulty: " + data.difficulty_applied;
+        document.getElementById("section-3").style.display = "block";
+      } catch (e) {
+        showError(e.message || "Request failed.");
+      }
+    }
+
+    async function getEvaluation() {
+      if (!requireStudent()) return;
+      hasEvaluation = false;
+      currentQuestions = [];
+      selectedAnswers = [];
+      try {
+        const res = await fetch("/evaluate/" + studentId, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" }
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+        document.getElementById("error-msg").style.display = "none";
+        currentQuestions = data.questions.map(function(q) {
+          return { question: q.question, options: q.options };
+        });
+        selectedAnswers = Array(currentQuestions.length).fill(null);
+        hasEvaluation = true;
+        renderQuestions();
+        document.getElementById("section-4").style.display = "block";
+      } catch (e) {
+        showError(e.message || "Request failed.");
+      }
+    }
+
+    function renderQuestions() {
+      const container = document.getElementById("questions-container");
+      container.innerHTML = "";
+      currentQuestions.forEach(function(item, i) {
+        const div = document.createElement("div");
+        const p = document.createElement("p");
+        p.textContent = (i + 1) + ". " + item.question;
+        div.appendChild(p);
+        item.options.forEach(function(option) {
+          const label = document.createElement("label");
+          const input = document.createElement("input");
+          input.type = "radio";
+          input.name = "q" + i;
+          input.value = option;
+          input.setAttribute("onchange", "updateAnswer(" + i + ", this.value)");
+          label.appendChild(input);
+          label.appendChild(document.createTextNode(" " + option));
+          div.appendChild(label);
+        });
+        container.appendChild(div);
+      });
+      document.getElementById("progress").textContent = "Answered 0 / 10";
+    }
+
+    function updateAnswer(index, value) {
+      selectedAnswers[index] = value;
+      const answered = selectedAnswers.filter(function(a) { return a !== null; }).length;
+      document.getElementById("progress").textContent = "Answered " + answered + " / 10";
+    }
+
+    async function submitCorrection() {
+      if (!requireStudent()) return;
+      if (!requireEvaluation()) return;
+      if (!requireAllAnswered()) return;
+      try {
+        const res = await fetch("/correct/" + studentId, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ questions: currentQuestions, answers: selectedAnswers })
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+        document.getElementById("error-msg").style.display = "none";
+        document.getElementById("result-score").textContent = "Score: " + data.score;
+        document.getElementById("result-decision").textContent = "Decision: " + data.decision;
+        document.getElementById("section-5").style.display = "block";
+      } catch (e) {
+        showError(e.message || "Request failed.");
+      }
+    }
+
+    function requireStudent() {
+      if (!studentId) { showError("Create a student first."); return false; }
+      return true;
+    }
+
+    function requireEvaluation() {
+      if (!hasEvaluation) { showError("Run evaluation first."); return false; }
+      return true;
+    }
+
+    function requireAllAnswered() {
+      if (selectedAnswers.some(function(a) { return a === null; })) {
+        showError("Answer all 10 questions before submitting.");
+        return false;
+      }
+      return true;
+    }
+
+    function showError(message) {
+      const el = document.getElementById("error-msg");
+      el.textContent = message;
+      el.style.display = "block";
+    }
+  </script>
+
+</body>
+</html>
