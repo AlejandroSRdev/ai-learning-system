@@ -40,6 +40,8 @@
   <p id="error-msg" style="display:none; color:red;"></p>
 
   <script>
+    const API_BASE = "";
+
     let studentId = null;
     let hasExplanation = false;
     let hasEvaluation = false;
@@ -51,7 +53,7 @@
       const goal = document.getElementById("goal").value;
       const current_topic = document.getElementById("current_topic").value;
       try {
-        const res = await fetch("/students", {
+        const res = await fetch(`${API_BASE}/students`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ level, goal, current_topic })
@@ -72,7 +74,7 @@
     async function getExplanation() {
       if (!requireStudent()) return;
       try {
-        const res = await fetch("/explain/" + studentId, {
+        const res = await fetch(`${API_BASE}/explain/` + studentId, {
           method: "POST",
           headers: { "Content-Type": "application/json" }
         });
@@ -102,7 +104,7 @@
       currentQuestions = [];
       selectedAnswers = [];
       try {
-        const res = await fetch("/evaluate/" + studentId, {
+        const res = await fetch(`${API_BASE}/evaluate/` + studentId, {
           method: "POST",
           headers: { "Content-Type": "application/json" }
         });
@@ -156,7 +158,7 @@
       if (!requireEvaluation()) return;
       if (!requireAllAnswered()) return;
       try {
-        const res = await fetch("/correct/" + studentId, {
+        const res = await fetch(`${API_BASE}/correct/` + studentId, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ questions: currentQuestions, answers: selectedAnswers })

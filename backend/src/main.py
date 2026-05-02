@@ -1,6 +1,8 @@
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from src.database import init_pool, close_pool
 from src.api.routes import students, explain, evaluate, correct
@@ -14,6 +16,15 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+
+FRONTEND_URL = os.getenv("FRONTEND_URL")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[FRONTEND_URL] if FRONTEND_URL else ["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(students.router, prefix="/students", tags=["students"])
 app.include_router(explain.router, prefix="/explain", tags=["explain"])
