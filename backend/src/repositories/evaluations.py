@@ -1,6 +1,14 @@
 """All DB access for the evaluations table."""
 
 
+async def get_average_score(pool, student_id: int) -> float:
+    result = await pool.fetchval(
+        "SELECT COALESCE(AVG(score), 0.0) FROM evaluations WHERE student_id = $1",
+        student_id,
+    )
+    return float(result)
+
+
 async def save_evaluation(
     pool,
     student_id: int,

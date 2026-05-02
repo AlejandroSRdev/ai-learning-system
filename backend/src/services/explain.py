@@ -9,10 +9,10 @@ async def generate_explanation(student_id: int, pool) -> dict:
     student = await students.get_student(pool, student_id)
     state = await learning_state.get_state(pool, student_id)
 
-    last_score = state["last_score"]
-    if last_score is None or last_score < 0.5:
+    average_score = state["average_score"]
+    if average_score < 0.5:
         difficulty = "basic"
-    elif last_score < 0.75:
+    elif average_score < 0.75:
         difficulty = "intermediate"
     else:
         difficulty = "advanced"
@@ -22,18 +22,24 @@ async def generate_explanation(student_id: int, pool) -> dict:
             topic=state["current_topic"],
             level=student["level"],
             difficulty=difficulty,
+            average_score=average_score,
+            evaluation_note=state["last_evaluation_note"],
         )
     except AITransientError:
         result = await call_explanation(
             topic=state["current_topic"],
             level=student["level"],
             difficulty=difficulty,
+            average_score=average_score,
+            evaluation_note=state["last_evaluation_note"],
         )
     except AIOutputValidationError:
         result = await call_explanation(
             topic=state["current_topic"],
             level=student["level"],
             difficulty=difficulty,
+            average_score=average_score,
+            evaluation_note=state["last_evaluation_note"],
             hint=EXPLANATION_RETRY_HINT,
         )
 

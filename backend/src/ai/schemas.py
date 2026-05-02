@@ -47,10 +47,18 @@ class EvaluationOutput(BaseModel):
 class CorrectionOutput(BaseModel):
     score: float
     mistakes: list[str]
+    evaluation_note: str
 
     @field_validator("score")
     @classmethod
     def check_score_range(cls, v: float) -> float:
         if v < 0.0 or v > 1.0:
             raise ValueError(f"Score must be between 0.0 and 1.0, got {v}")
+        return v
+
+    @field_validator("evaluation_note")
+    @classmethod
+    def check_evaluation_note_not_empty(cls, v: str) -> str:
+        if not v:
+            raise ValueError("evaluation_note must not be empty")
         return v

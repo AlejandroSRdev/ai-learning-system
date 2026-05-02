@@ -18,10 +18,13 @@ EXPLANATION_RETRY_HINT = (
 
 
 async def call_explanation(
-    topic: str, level: str, difficulty: str, hint: str | None = None
+    topic: str, level: str, difficulty: str, average_score: float, evaluation_note: str, hint: str | None = None
 ) -> ExplanationOutput:
     client = get_openai_client()
-    user_content = EXPLANATION_USER.format(topic=topic, level=level, difficulty=difficulty)
+    user_content = EXPLANATION_USER.format(
+        topic=topic, level=level, difficulty=difficulty,
+        average_score=average_score, evaluation_note=evaluation_note
+    )
     if hint is not None:
         user_content = user_content + "\n\n" + hint
     try:

@@ -18,6 +18,8 @@ class LearningState:
     last_score: float
     iteration: int
     updated_at: datetime
+    average_score: float = 0.0
+    last_evaluation_note: str = ""
 
 
 @dataclass

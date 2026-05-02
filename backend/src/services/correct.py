@@ -26,8 +26,15 @@ async def process_correction(
         answers={"items": answers},
         score=result.score,
     )
+    average_score = await evaluations.get_average_score(pool, student_id)
+    evaluation_note = result.evaluation_note
     await learning_state.update_state(
-        pool, student_id, score=result.score, iteration=state["iteration"] + 1
+        pool,
+        student_id,
+        score=result.score,
+        iteration=state["iteration"] + 1,
+        average_score=average_score,
+        evaluation_note=evaluation_note,
     )
     decision = decide_next_step(result.score)
     return {"score": result.score, "decision": decision}

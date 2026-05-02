@@ -3,7 +3,8 @@
 
 async def get_state(pool, student_id: int) -> dict:
     row = await pool.fetchrow(
-        "SELECT * FROM learning_state WHERE student_id = $1 ORDER BY updated_at DESC LIMIT 1",
+        "SELECT id, student_id, current_topic, last_score, iteration, average_score, last_evaluation_note, updated_at"
+        " FROM learning_state WHERE student_id = $1 ORDER BY updated_at DESC LIMIT 1",
         student_id,
     )
     if row is None:
@@ -11,12 +12,19 @@ async def get_state(pool, student_id: int) -> dict:
     return dict(row)
 
 
-async def update_state(pool, student_id: int, score: float, iteration: int) -> None:
+async def update_state(
+    pool, student_id: int, score: float, iteration: int,
+    average_score: float, evaluation_note: str
+) -> None:
     await pool.execute(
-        "UPDATE learning_state SET last_score = $2, iteration = $3, updated_at = NOW() WHERE student_id = $1",
+        "UPDATE learning_state"
+        " SET last_score = $2, iteration = $3, average_score = $4, last_evaluation_note = $5, updated_at = NOW()"
+        " WHERE student_id = $1",
         student_id,
         score,
         iteration,
+        average_score,
+        evaluation_note,
     )
 
 
