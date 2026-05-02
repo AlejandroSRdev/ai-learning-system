@@ -1,10 +1,10 @@
-# fly.toml app configuration file generated for ai-learning-system on 2026-05-02T08:42:37Z
+# fly.toml app configuration file generated for ai-learning-system on 2026-05-02T09:06:24Z
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
 app = 'ai-learning-system'
-primary_region = 'ams'
+primary_region = 'cdg'
 
 [build]
 
