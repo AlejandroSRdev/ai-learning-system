@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.database import init_pool, close_pool
+from src.database import engine
 from src.api.routes import students, explain, evaluate, correct
 
 logger = logging.getLogger(__name__)
@@ -14,12 +14,12 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     try:
-        app.state.pool = await init_pool()
+        async with engine.begin() as conn:
+            await conn.run_sync(lambda _: None)
     except Exception:
-        logger.critical("Startup failed: could not initialize database pool. Application will not start.")
+        logger.critical("Startup failed: database connection could not be established.")
         raise
     yield
-    await close_pool(app.state.pool)
 
 
 app = FastAPI(lifespan=lifespan)
