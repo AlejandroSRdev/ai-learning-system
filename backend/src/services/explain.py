@@ -1,13 +1,15 @@
 """Orchestrates explanation flow: fetches student state, determines difficulty, calls AI layer."""
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.ai.exceptions import AIOutputValidationError, AITransientError
 from src.ai.explanation import EXPLANATION_RETRY_HINT, call_explanation
 from src.repositories import learning_state, students
 
 
-async def generate_explanation(student_id: int, pool) -> dict:
-    student = await students.get_student(pool, student_id)
-    state = await learning_state.get_state(pool, student_id)
+async def generate_explanation(student_id: int, session: AsyncSession) -> dict:
+    student = await students.get_student(session, student_id)
+    state = await learning_state.get_state(session, student_id)
 
     average_score = state["average_score"]
     if average_score < 0.5:

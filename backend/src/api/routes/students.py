@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, field_validator
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.api.deps import get_pool
+from src.api.deps import get_db
 from src.repositories import learning_state, students
 
 router = APIRouter()
@@ -24,11 +25,10 @@ class CreateStudentRequest(BaseModel):
 
 
 @router.post("")
-async def create_student(body: CreateStudentRequest, pool=Depends(get_pool)):
-    async with pool.acquire() as conn:
-        async with conn.transaction():
-            student = await students.create_student(conn, body.level, body.goal)
-            await learning_state.create_state(conn, student["id"], body.current_topic)
+async def create_student(body: CreateStudentRequest, session: AsyncSession = Depends(get_db)):
+    student = await students.create_student(session, body.level, body.goal)
+    await learning_state.create_state(session, student["id"], body.current_topic)
+    await session.commit()
     return {"student_id": student["id"]}
 
 

@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, field_validator, model_validator
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.ai.exceptions import AIOutputValidationError, AITransientError
-from src.api.deps import get_pool
+from src.api.deps import get_db
 from src.services.correct import process_correction
 
 router = APIRouter()
@@ -40,9 +41,9 @@ class CorrectRequest(BaseModel):
 
 
 @router.post("/{student_id}")
-async def correct(student_id: int, body: CorrectRequest, pool=Depends(get_pool)):
+async def correct(student_id: int, body: CorrectRequest, session: AsyncSession = Depends(get_db)):
     try:
-        return await process_correction(student_id, body.questions, body.answers, pool)
+        return await process_correction(student_id, body.questions, body.answers, session)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
     except AIOutputValidationError as exc:
